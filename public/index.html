@@ -50,16 +50,8 @@
         line-height: 1.6;
     }
 
-    ul {
-        list-style: none;
-        margin: 25px 0;
-        padding: 0;
-    }
-
-    li {
-        display: table-cell;
-        font-weight: bold;
-        width: 1%;
+    ul, li {
+        color: rgba(0, 0, 0, 0.5);
     }
     </style>
 </head>
@@ -92,6 +84,10 @@
             <code>echo 'deb [signed-by=/usr/share/keyrings/packages-colortocc.gpg] https://packages.colorto.cc/ubuntu focal main' | sudo tee -a /etc/apt/sources.list.d/colortocc.list</code>
         </p>
 
+        <p>Provided packages:</p>
+        <ul id="focal">
+        </ul>
+
         <p>
             <strong>Ubuntu 22.04 LTS Jammy Package Repository</strong>
         </p>
@@ -99,6 +95,10 @@
         <p>
             <code>echo 'deb [signed-by=/usr/share/keyrings/packages-colortocc.gpg] https://packages.colorto.cc/ubuntu jammy main' | sudo tee -a /etc/apt/sources.list.d/colortocc.list</code>
         </p>
+
+        <p>Provided packages:</p>
+        <ul id="jammy">
+        </ul>
 
         <p>
             <strong>Issues</strong>
@@ -109,5 +109,46 @@
         </p>
 
     </div>
+    <script>
+        const packages = (pkg) => {
+            let result = [];
+            let m = new Map();
+            for(const line of pkg.split("\n")) {
+                const match = line.match(/([^:]+):(.*)/);
+                if(match !== null) {
+                    const [_full, casedKey, rawValue] = match;
+                    const key = casedKey.toLocaleLowerCase();
+                    const value = rawValue.trim();
+                    m.set(key, value);
+                    const package = m.get("package");
+                    const version = m.get("version");
+                    const filename = m.get("filename");
+                    if(package !== undefined && version !== undefined && filename !== undefined ) {
+                        result.push({ package, version, filename });
+                        m.clear();
+                    }
+                }
+            }
+            return result;
+        };
+
+        const appendPackages = (node, pkg) => {
+            for(const p of pkg) {
+                const a = document.createElement("a");
+                a.href = `ubuntu/${p.filename}`;
+                a.appendChild(document.createTextNode(`${p.package} ${p.version}`));
+                const item = document.createElement("li");
+                item.appendChild(a);
+                node.appendChild(item);
+            }
+        };
+
+        for(const suite of ["focal", "jammy"]) {
+            fetch("ubuntu/dists/focal/main/binary-amd64/Packages")
+                .then(r => r.text())
+                .then(r => appendPackages(document.getElementById(suite), packages(r)))
+                .catch(console.error);
+        }
+    </script>
 </body>
 </html>
