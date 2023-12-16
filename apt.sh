@@ -9,6 +9,7 @@ set -euo pipefail
 # repos=(kiron1/proxydetox kiron1/bazel-compile-commands)
 repos=(kiron1/proxydetox)
 machines=(x86_64)
+key=packages@colorto.cc
 
 declare -A aptarch=( ["x86_64"]="amd64" )
 
@@ -41,4 +42,10 @@ for s in "${suits[@]}"; do
   done
   apt-ftparchive generate apt-ftparchive.conf
   apt-ftparchive "-c=${s}.conf" release "${archive_dir}/dists/${s}" > "${archive_dir}/dists/${s}/Release"
+done
+
+
+for s in "${suits[@]}"; do
+  gpg -u "${key}" -bao "${archive_dir}/dists/${s}/Release.gpg" "${archive_dir}/dists/${s}/Release"
+  gpg -u "${key}" --clear-sign --output "${archive_dir}/dists/${s}/InRelease" "${archive_dir}/dists/${s}/Release"
 done
