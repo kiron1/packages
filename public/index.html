@@ -144,7 +144,7 @@
         };
 
         for(const suite of ["focal", "jammy"]) {
-            fetch("ubuntu/dists/focal/main/binary-amd64/Packages")
+            fetch(`ubuntu/dists/${suite}/main/binary-amd64/Packages`)
                 .then(r => r.text())
                 .then(r => appendPackages(document.getElementById(suite), packages(r)))
                 .catch(console.error);
